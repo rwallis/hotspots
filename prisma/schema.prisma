@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SyncStatus {
+  IDLE
+  DISCOVERING
+  IMPORTING
+  ANALYZING
+  COMPLETED
+  FAILED
+}
+
+enum FlightSourceType {
+  CLUB
+  AIRPORT
+  UPLOAD
+}
+
+model SyncState {
+  year               Int        @id
+  status             SyncStatus @default(IDLE)
+  totalFlights       Int        @default(0)
+  importedFlights    Int        @default(0)
+  analyzedFlights    Int        @default(0)
+  analysisPhase      String?
+  hotspotsProcessed  Int        @default(0)
+  hotspotsTotal      Int        @default(0)
+  sourceType         String?
+  sourceId           String?
+  sourceLabel        String?
+  pendingWeGlideIds  Int[]      @default([])
+  cachedFlights      Json?
+  errorMessage       String?
+  lastRunAt          DateTime?
+  updatedAt          DateTime   @updatedAt
+}
+
+model Flight {
+  id                String           @id @default(cuid())
+  weglideId         Int?             @unique
+  uploadId          String?          @unique
+  sourceType        FlightSourceType @default(CLUB)
+  sourceKey         String           @default("club:1006")
+  sourceLabel       String?
+  igcfileId         Int?
+  pilotName         String
+  pilotUserId       Int?
+  flightDate        DateTime
+  durationSeconds   Int
+  distanceKm        Float?
+  score             Float?
+  launchAirport     String?
+  launchAirportIcao String?
+  year              Int
+  igcContent        String?          @db.Text
+  rawJson           Json?
+  excluded          Boolean          @default(false)
+  analyzedAt        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  thermals          Thermal[]
+
+  @@index([year])
+  @@index([pilotName])
+  @@index([sourceKey, year])
+}
+
+model Thermal {
+  id          String   @id @default(cuid())
+  flightId    String
+  flight      Flight   @relation(fields: [flightId], references: [id], onDelete: Cascade)
+  hotspotId   String?
+  hotspot     Hotspot? @relation(fields: [hotspotId], references: [id], onDelete: SetNull)
+  lat         Float
+  lon         Float
+  avgClimbKts Float
+  avgClimbFpm Float?
+  altFt       Float?
+  durationSec Int
+  pilotName   String
+  year        Int
+
+  @@index([hotspotId])
+  @@index([year])
+}
+
+model Hotspot {
+  id          String    @id @default(cuid())
+  name        String
+  lat         Float
+  lon         Float
+  avgClimbKts Float
+  count       Int
+  years       Int[]
+  pilotNames  String[]
+  thermals    Thermal[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([lat, lon])
+}
