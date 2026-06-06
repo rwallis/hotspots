@@ -109,7 +109,7 @@ You do **not** need to set `PORT` — Railway injects it; the app reads it via `
 `railway.toml` + `nixpacks.toml` configure:
 
 - **Node 20** via `.node-version`
-- **Install:** `npm ci --include=dev` (dev deps needed for TypeScript/Tailwind build)
+- **Install:** `npm install --include=dev` (dev deps needed for TypeScript/Tailwind build; avoids strict `npm ci` lockfile failures on Railway)
 - **Build:** `npm run build` (runs `prisma generate` + Next.js build)
 - **Pre-deploy:** `npx prisma db push` (creates/updates tables before each deploy)
 - **Start:** `npm start` (Next.js on Railway’s `PORT`)
