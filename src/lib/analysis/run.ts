@@ -15,7 +15,7 @@ type ThermalWithId = ThermalInput & {
 
 type FlightMeta = {
   flightDate: Date;
-  weglideId: number;
+  weglideId: number | null;
 };
 
 type ThermalSummary = {
@@ -28,7 +28,8 @@ type ThermalSummary = {
 
 function flightLabel(meta: FlightMeta, pilotName: string): string {
   const date = meta.flightDate.toISOString().slice(0, 10);
-  return `${date} ${pilotName} ${meta.weglideId}`;
+  const idSuffix = meta.weglideId != null ? ` ${meta.weglideId}` : "";
+  return `${date} ${pilotName}${idSuffix}`;
 }
 
 async function loadFlightMetaById(
