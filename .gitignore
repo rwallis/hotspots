@@ -38,6 +38,7 @@ _commitmsg.txt
 _run_commit_push.bat
 COMMIT_PUSH_RESULT.txt
 git-status-out.txt
+npm-install-out.txt
 
 # vercel
 .vercel
