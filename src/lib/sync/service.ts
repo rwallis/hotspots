@@ -1,4 +1,4 @@
-import { FlightSourceType, SyncStatus } from "@prisma/client";
+import { FlightSourceType, Prisma, SyncStatus } from "@prisma/client";
 import { checkDbHealth } from "@/lib/db/health";
 import { prisma } from "@/lib/db";
 import { formatServiceError } from "@/lib/errors";
@@ -136,7 +136,7 @@ async function upsertFlightRecord(
     launchAirportIcao: airportFields.launchAirportIcao,
     year,
     igcContent,
-    rawJson: flight,
+    rawJson: flight as Prisma.InputJsonValue,
   };
 
   if (options?.forceUpdate) {
