@@ -34,7 +34,7 @@ export default function UploadPage() {
     };
   }, []);
 
-  function selectFiles(incoming: File[]) {
+  function selectFiles(incoming: FileList | File[]) {
     const igcFiles = filterIgcFiles(incoming);
     if (igcFiles.length === 0) return;
     setFiles(igcFiles);
