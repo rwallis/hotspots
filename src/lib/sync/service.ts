@@ -272,7 +272,7 @@ export async function discoverFlightsForYear(
         importedFlights: 0,
         analyzedFlights: 0,
         pendingWeGlideIds: pendingIds,
-        cachedFlights: flights,
+        cachedFlights: flights as Prisma.InputJsonValue,
       },
     });
 
