@@ -22,6 +22,8 @@ export default function Explorer() {
   const [selectedPilots, setSelectedPilots] = useState<string[]>([]);
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [minOccurrences, setMinOccurrences] = useState(1);
+  const [minClimbKts, setMinClimbKts] = useState(0);
   const [hotspots, setHotspots] = useState<HotspotDto[]>([]);
   const [sources, setSources] = useState<SourceWithPilotsDto[]>([]);
   const [years, setYears] = useState<number[]>([]);
@@ -116,11 +118,18 @@ export default function Explorer() {
   }, [selectedPilots, selectedSourceKeys, expandedSourceGroups]);
 
   const filteredHotspots = useMemo(() => {
-    if (!allowedPilotSet) return hotspots;
-    return hotspots.filter((hotspot) =>
-      hotspot.pilots.some((pilot) => allowedPilotSet.has(pilot)),
-    );
-  }, [hotspots, allowedPilotSet]);
+    return hotspots.filter((hotspot) => {
+      if (hotspot.count < minOccurrences) return false;
+      if (hotspot.avgClimbKts < minClimbKts) return false;
+      if (
+        allowedPilotSet &&
+        !hotspot.pilots.some((pilot) => allowedPilotSet.has(pilot))
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [hotspots, allowedPilotSet, minOccurrences, minClimbKts]);
 
   useEffect(() => {
     const validKeys = new Set(sources.map((source) => source.sourceKey));
@@ -166,11 +175,16 @@ export default function Explorer() {
   function clearFilters() {
     setSelectedSourceKeys([]);
     setSelectedPilots([]);
+    setMinOccurrences(1);
+    setMinClimbKts(0);
     setSelectedHotspotId(null);
   }
 
   const hasActiveFilters =
-    selectedSourceKeys.length > 0 || selectedPilots.length > 0;
+    selectedSourceKeys.length > 0 ||
+    selectedPilots.length > 0 ||
+    minOccurrences > 1 ||
+    minClimbKts > 0;
 
   const statusText = loading
     ? "Loading…"
@@ -268,6 +282,13 @@ export default function Explorer() {
                       {selectedSourceKeys.length} src
                     </span>
                   )}
+                  {(minOccurrences > 1 || minClimbKts > 0) && (
+                    <span className="rounded-full bg-violet-500/20 px-1.5 py-0.5 font-medium text-violet-300">
+                      {minOccurrences > 1 ? `≥${minOccurrences}` : ""}
+                      {minOccurrences > 1 && minClimbKts > 0 ? " · " : ""}
+                      {minClimbKts > 0 ? `${minClimbKts}+ kt` : ""}
+                    </span>
+                  )}
                   <svg
                     className={`h-3.5 w-3.5 transition ${filtersOpen ? "rotate-180" : ""}`}
                     viewBox="0 0 20 20"
@@ -307,6 +328,45 @@ export default function Explorer() {
                       </option>
                     ))}
                   </select>
+
+                  <span className="hidden h-4 w-px bg-slate-700 sm:block" />
+
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span className="whitespace-nowrap font-medium">Min occurs</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={999}
+                      step={1}
+                      value={minOccurrences}
+                      onChange={(event) => {
+                        const next = Math.max(1, Number(event.target.value) || 1);
+                        setMinOccurrences(next);
+                        setSelectedHotspotId(null);
+                      }}
+                      aria-label="Minimum occurrences"
+                      className="w-14 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-16 sm:text-sm"
+                    />
+                  </label>
+
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span className="whitespace-nowrap font-medium">Min climb</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={15}
+                      step={0.5}
+                      value={minClimbKts}
+                      onChange={(event) => {
+                        const next = Math.max(0, Number(event.target.value) || 0);
+                        setMinClimbKts(next);
+                        setSelectedHotspotId(null);
+                      }}
+                      aria-label="Minimum climb rate in knots"
+                      className="w-14 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-16 sm:text-sm"
+                    />
+                    <span className="text-[10px] text-slate-500">kt</span>
+                  </label>
 
                   <span className="hidden h-4 w-px bg-slate-700 sm:block" />
 
@@ -489,7 +549,12 @@ export default function Explorer() {
                               {hotspot.name}
                             </h3>
                             <p className="mt-0.5 truncate text-[10px] text-slate-500 sm:text-xs">
+                              {hotspot.count} occur{hotspot.count === 1 ? "" : "s"}
+                              {" · "}
                               {hotspot.pilots.join(", ")}
+                              {hotspot.topAltFt != null
+                                ? ` · top ${Math.round(hotspot.topAltFt).toLocaleString()} ft`
+                                : ""}
                             </p>
                           </div>
                           <span

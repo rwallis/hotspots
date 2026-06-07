@@ -90,6 +90,10 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
                 year or all years.
               </li>
               <li>
+                <strong className="text-slate-100">Min occurs / Min climb</strong> hide weak or
+                one-off hotspots — e.g. 3+ occurrences and 2+ kt for reliable lift.
+              </li>
+              <li>
                 <strong className="text-slate-100">Club / airport pills</strong> filter by source;
                 pilot pills appear when a source is selected.
               </li>
