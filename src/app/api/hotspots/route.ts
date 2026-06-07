@@ -42,6 +42,27 @@ export async function GET(request: Request) {
       );
     }
 
+    const hotspotIds = hotspots.map((hotspot) => hotspot.id);
+
+    let topAltByHotspot = new Map<string, number>();
+    if (hotspotIds.length > 0) {
+      const altGroups = await prisma.thermal.groupBy({
+        by: ["hotspotId"],
+        where: {
+          hotspotId: { in: hotspotIds },
+          altFt: { not: null },
+          ...(year ? { year } : {}),
+        },
+        _max: { altFt: true },
+      });
+
+      topAltByHotspot = new Map(
+        altGroups
+          .filter((group) => group.hotspotId && group._max.altFt != null)
+          .map((group) => [group.hotspotId!, group._max.altFt!]),
+      );
+    }
+
     const filtered: HotspotDto[] = hotspots
       .map((hotspot) => {
         const count =
@@ -55,6 +76,7 @@ export async function GET(request: Request) {
           lat: hotspot.lat,
           lon: hotspot.lon,
           avgClimbKts: hotspot.avgClimbKts,
+          topAltFt: topAltByHotspot.get(hotspot.id) ?? null,
           count,
           pilot: hotspot.pilotNames[0] ?? "Unknown",
           pilots: hotspot.pilotNames,

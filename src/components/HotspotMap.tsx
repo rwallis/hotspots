@@ -148,6 +148,12 @@ export default function HotspotMap({
                   {selected.count} occurrence{selected.count === 1 ? "" : "s"}
                 </span>
               </div>
+              {selected.topAltFt != null && (
+                <div className="text-xs text-slate-600">
+                  <span className="font-medium text-slate-700">Top of thermal:</span>{" "}
+                  {Math.round(selected.topAltFt).toLocaleString()} ft MSL
+                </div>
+              )}
               <div className="text-xs text-slate-600">
                 <span className="font-medium text-slate-700">Pilots:</span>{" "}
                 {selected.pilots.join(", ")}
