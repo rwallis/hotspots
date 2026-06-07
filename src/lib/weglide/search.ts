@@ -299,6 +299,8 @@ async function searchDocument<T extends WeGlideAirport | WeGlideClub>(
   presets: T[],
   usaFilter: (item: T) => boolean,
   lookupById: (id: number) => Promise<T | null>,
+  fromHit: (hit: SearchHit) => T,
+  fromToken: (id: number, label: string) => T,
 ): Promise<T[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
@@ -324,10 +326,7 @@ async function searchDocument<T extends WeGlideAirport | WeGlideClub>(
     if (lookedUp) {
       addItem(lookedUp);
     } else if (token.label) {
-      addItem({
-        id: token.id,
-        name: token.label,
-      } as T);
+      addItem(fromToken(token.id, token.label));
     }
   }
 
@@ -339,14 +338,7 @@ async function searchDocument<T extends WeGlideAirport | WeGlideClub>(
   const hits = await runSearchVariants(document, trimmed, limit);
   for (const hit of hits) {
     if (!matchesQuery(hit.name, trimmed)) continue;
-    addItem({
-      id: hit.id,
-      name: hit.name,
-      icao: hit.icao,
-      region: hit.region,
-      country_name: hit.country_name,
-      country: hit.country,
-    } as T);
+    addItem(fromHit(hit));
     if (merged.length >= limit) break;
   }
 
@@ -364,6 +356,14 @@ export async function searchAirports(
     US_AIRPORT_PRESETS,
     isUsaAirport,
     lookupAirportById,
+    (hit) => ({
+      id: hit.id,
+      name: hit.name,
+      icao: hit.icao,
+      country_name: hit.country_name,
+      country: hit.country,
+    }),
+    (id, label) => ({ id, name: label }),
   );
 
   return results.filter(
@@ -382,6 +382,14 @@ export async function searchClubs(
     US_CLUB_PRESETS,
     isUsaClub,
     lookupClubById,
+    (hit) => ({
+      id: hit.id,
+      name: hit.name,
+      region: hit.region,
+      country_name: hit.country_name,
+      country: hit.country,
+    }),
+    (id, label) => ({ id, name: label }),
   );
 
   return results.filter((club) => club.id && club.name);
