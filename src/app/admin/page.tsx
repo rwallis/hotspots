@@ -16,13 +16,21 @@ const YEAR_OPTIONS = Array.from(
 );
 
 type Step = "idle" | "discovering" | "importing" | "analyzing" | "completed" | "failed";
-type RunningOp = "none" | "sync" | "analyze" | "refetch";
+type RunningOp = "none" | "sync" | "sync-all" | "analyze" | "refetch";
 
 const DEFAULT_SOURCE: SyncSourceDto = {
   type: "club",
   id: 1006,
   label: "Fault Line Flyers",
 };
+
+const CHICAGO_GLIDER_CLUB: SyncSourceDto = {
+  type: "club",
+  id: 927,
+  label: "Chicago Glider Club",
+};
+
+const ALL_YEARS = [...YEAR_OPTIONS].reverse();
 
 function syncBody(
   source: SyncSourceDto,
@@ -53,6 +61,11 @@ export default function AdminPage() {
   const [status, setStatus] = useState<SyncStatusDto | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [runningOp, setRunningOp] = useState<RunningOp>("none");
+  const [allYearsProgress, setAllYearsProgress] = useState<{
+    index: number;
+    total: number;
+    year: number;
+  } | null>(null);
   const [dbHealthMessage, setDbHealthMessage] = useState<string | null>(null);
   const running = runningOp !== "none";
 
@@ -87,7 +100,11 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (runningOp !== "analyze" && runningOp !== "refetch") {
+    if (
+      runningOp !== "analyze" &&
+      runningOp !== "refetch" &&
+      runningOp !== "sync-all"
+    ) {
       return;
     }
 
@@ -194,101 +211,34 @@ export default function AdminPage() {
     }
   }
 
-  async function runFullSync() {
-    if (!ensureSourceSelected()) return;
-
-    setRunningOp("sync");
+  async function syncSingleYear(targetYear: number): Promise<void> {
+    setYear(targetYear);
     setStep("discovering");
-    setStatus((current) =>
-      current ? { ...current, errorMessage: null } : current,
-    );
-    appendLog(`Starting incremental sync for ${year} — ${source.label}`);
+    appendLog(`Starting incremental sync for ${targetYear} — ${source.label}`);
 
-    try {
-      appendLog("Fetching flight list via local WeGlide proxy…");
-      const flights = await fetchFlightsInBrowser(year, source);
+    appendLog("Fetching flight list via local WeGlide proxy…");
+    const flights = await fetchFlightsInBrowser(targetYear, source);
 
-      const discoverRes = await fetch(`/api/sync/${year}/discover`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: syncBody(source, { flights, mode: "incremental" }),
-      });
-      const discoverJson = await discoverRes.json();
-      if (!discoverRes.ok) {
-        throw new Error(discoverJson.error ?? "Discovery failed");
-      }
-
-      appendLog(
-        `Found ${discoverJson.totalDiscovered} qualifying flights (${discoverJson.skippedExisting ?? 0} already in database)`,
-      );
-      appendLog(`${discoverJson.totalFlights} new flights to import`);
-      setStep("importing");
-
-      if (discoverJson.totalFlights === 0) {
-        appendLog("No new flights to download. Running analyze for unanalyzed flights.");
-        setStep("analyzing");
-        const analyzeRes = await fetch(`/api/sync/${year}/analyze`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: syncBody(source, { incremental: true }),
-        });
-        const analyzeJson = await analyzeRes.json();
-        if (!analyzeRes.ok) {
-          throw new Error(analyzeJson.error ?? "Analysis failed");
-        }
-      appendLog(
-        `Analysis complete: ${analyzeJson.thermalCount} thermals, ${analyzeJson.yearHotspotClusters ?? analyzeJson.hotspotCount} clusters for ${year}`,
-      );
-      if (analyzeJson.flightsAnalyzed === 0) {
-        appendLog(
-          "No matching flights in the database for this source/year. Run Download new first.",
-        );
-      }
-      setStep("completed");
-      await refreshStatus(year);
-      return;
+    const discoverRes = await fetch(`/api/sync/${targetYear}/discover`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: syncBody(source, { flights, mode: "incremental" }),
+    });
+    const discoverJson = await discoverRes.json();
+    if (!discoverRes.ok) {
+      throw new Error(discoverJson.error ?? "Discovery failed");
     }
 
-      const flightMap = new Map(
-        (discoverJson.flights as WeGlideFlight[]).map((flight) => [
-          flight.id,
-          flight,
-        ]),
-      );
+    appendLog(
+      `Found ${discoverJson.totalDiscovered} qualifying flights (${discoverJson.skippedExisting ?? 0} already in database)`,
+    );
+    appendLog(`${discoverJson.totalFlights} new flights to import`);
+    setStep("importing");
 
-      let pendingIds = (discoverJson.flights as WeGlideFlight[]).map(
-        (flight) => flight.id,
-      );
-      while (pendingIds.length > 0) {
-        const batchFlights = pendingIds
-          .slice(0, 5)
-          .map((id) => flightMap.get(id))
-          .filter((flight): flight is WeGlideFlight => Boolean(flight));
-
-        appendLog(`Downloading IGC files for ${batchFlights.length} flights…`);
-        const igcItems = await fetchIgcFilesForFlights(batchFlights);
-
-        const importRes = await fetch(`/api/sync/${year}/import`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: syncBody(source, { items: igcItems, mode: "incremental" }),
-        });
-        const importJson = await importRes.json();
-        if (!importRes.ok) {
-          throw new Error(importJson.error ?? "Import failed");
-        }
-
-        pendingIds = pendingIds.slice(batchFlights.length);
-        appendLog(
-          `Imported batch of ${importJson.importedThisBatch}. ${pendingIds.length} remaining.`,
-        );
-        await refreshStatus(year);
-      }
-
+    if (discoverJson.totalFlights === 0) {
+      appendLog("No new flights to download. Running analyze for unanalyzed flights.");
       setStep("analyzing");
-      appendLog("Analyzing thermals and rebuilding hotspots");
-
-      const analyzeRes = await fetch(`/api/sync/${year}/analyze`, {
+      const analyzeRes = await fetch(`/api/sync/${targetYear}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: syncBody(source, { incremental: true }),
@@ -297,26 +247,137 @@ export default function AdminPage() {
       if (!analyzeRes.ok) {
         throw new Error(analyzeJson.error ?? "Analysis failed");
       }
-
       appendLog(
-        `Analysis complete: ${analyzeJson.thermalCount} thermals, ${analyzeJson.yearHotspotClusters ?? analyzeJson.hotspotCount} clusters for ${year}, ${analyzeJson.hotspotCount} hotspots total`,
+        `Analysis complete: ${analyzeJson.thermalCount} thermals, ${analyzeJson.yearHotspotClusters ?? analyzeJson.hotspotCount} clusters for ${targetYear}`,
       );
-      appendLog(
-        `IGC coverage: ${analyzeJson.flightsWithIgc ?? 0} with IGC, ${analyzeJson.flightsWithTrackPoints ?? 0} with track points`,
-      );
-      setStep("completed");
-      await refreshStatus(year);
-    } catch (error) {
-      const message = formatSyncError(error);
-      appendLog(message);
-      if (message.includes("403")) {
+      if (analyzeJson.flightsAnalyzed === 0) {
         appendLog(
-          "WeGlide blocked the server request. Email info@weglide.org for an API key, then add WEGLIDE_API_KEY to .env and .env.local.",
+          "No matching flights in the database for this source/year. Run Download new first.",
         );
       }
-      setStep("failed");
+      setStep("completed");
+      await refreshStatus(targetYear);
+      return;
+    }
+
+    const flightMap = new Map(
+      (discoverJson.flights as WeGlideFlight[]).map((flight) => [
+        flight.id,
+        flight,
+      ]),
+    );
+
+    let pendingIds = (discoverJson.flights as WeGlideFlight[]).map(
+      (flight) => flight.id,
+    );
+    while (pendingIds.length > 0) {
+      const batchFlights = pendingIds
+        .slice(0, 5)
+        .map((id) => flightMap.get(id))
+        .filter((flight): flight is WeGlideFlight => Boolean(flight));
+
+      appendLog(`Downloading IGC files for ${batchFlights.length} flights…`);
+      const igcItems = await fetchIgcFilesForFlights(batchFlights);
+
+      const importRes = await fetch(`/api/sync/${targetYear}/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: syncBody(source, { items: igcItems, mode: "incremental" }),
+      });
+      const importJson = await importRes.json();
+      if (!importRes.ok) {
+        throw new Error(importJson.error ?? "Import failed");
+      }
+
+      pendingIds = pendingIds.slice(batchFlights.length);
+      appendLog(
+        `Imported batch of ${importJson.importedThisBatch}. ${pendingIds.length} remaining.`,
+      );
+      await refreshStatus(targetYear);
+    }
+
+    setStep("analyzing");
+    appendLog("Analyzing thermals and rebuilding hotspots");
+
+    const analyzeRes = await fetch(`/api/sync/${targetYear}/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: syncBody(source, { incremental: true }),
+    });
+    const analyzeJson = await analyzeRes.json();
+    if (!analyzeRes.ok) {
+      throw new Error(analyzeJson.error ?? "Analysis failed");
+    }
+
+    appendLog(
+      `Analysis complete: ${analyzeJson.thermalCount} thermals, ${analyzeJson.yearHotspotClusters ?? analyzeJson.hotspotCount} clusters for ${targetYear}, ${analyzeJson.hotspotCount} hotspots total`,
+    );
+    appendLog(
+      `IGC coverage: ${analyzeJson.flightsWithIgc ?? 0} with IGC, ${analyzeJson.flightsWithTrackPoints ?? 0} with track points`,
+    );
+    setStep("completed");
+    await refreshStatus(targetYear);
+  }
+
+  function handleSyncError(error: unknown) {
+    const message = formatSyncError(error);
+    appendLog(message);
+    if (message.includes("403")) {
+      appendLog(
+        "WeGlide blocked the server request. Email info@weglide.org for an API key, then add WEGLIDE_API_KEY to .env and .env.local.",
+      );
+    }
+    setStep("failed");
+  }
+
+  async function runFullSync() {
+    if (!ensureSourceSelected()) return;
+
+    setRunningOp("sync");
+    setStatus((current) =>
+      current ? { ...current, errorMessage: null } : current,
+    );
+
+    try {
+      await syncSingleYear(year);
+    } catch (error) {
+      handleSyncError(error);
     } finally {
       setRunningOp("none");
+    }
+  }
+
+  async function runFullSyncAllYears() {
+    if (!ensureSourceSelected()) return;
+
+    const firstYear = ALL_YEARS[0];
+    const lastYear = ALL_YEARS[ALL_YEARS.length - 1];
+
+    setRunningOp("sync-all");
+    setStatus((current) =>
+      current ? { ...current, errorMessage: null } : current,
+    );
+    appendLog(
+      `Bulk import: ${ALL_YEARS.length} years (${firstYear}–${lastYear}) for ${source.label}`,
+    );
+
+    try {
+      for (let index = 0; index < ALL_YEARS.length; index += 1) {
+        const targetYear = ALL_YEARS[index];
+        setAllYearsProgress({
+          index: index + 1,
+          total: ALL_YEARS.length,
+          year: targetYear,
+        });
+        await syncSingleYear(targetYear);
+      }
+      appendLog(`Bulk import complete for ${source.label}`);
+      setStep("completed");
+    } catch (error) {
+      handleSyncError(error);
+    } finally {
+      setRunningOp("none");
+      setAllYearsProgress(null);
     }
   }
 
@@ -391,6 +452,50 @@ export default function AdminPage() {
               disabled={running}
             />
           </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={running}
+              onClick={() => setSource(CHICAGO_GLIDER_CLUB)}
+              className="rounded-full border border-slate-600 bg-slate-950/60 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-sky-600/50 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+            >
+              Use Chicago Glider Club
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-3xl border border-slate-800/80 bg-slate-900/70 p-5 shadow-xl backdrop-blur-sm sm:p-7">
+          <h2 className="text-lg font-bold">Bulk import (local dev)</h2>
+          <p className="mt-1 text-sm leading-relaxed text-slate-400">
+            Runs incremental download + analyze for every year from{" "}
+            {ALL_YEARS[0]} through {ALL_YEARS[ALL_YEARS.length - 1]}. Uses your
+            machine&apos;s WeGlide access via the local app — no API key needed
+            while running <span className="font-mono text-slate-300">npm run dev</span>.
+            Select Chicago Glider Club (or another source) first.
+          </p>
+          <div className="mt-4">
+            <ActionButton
+              disabled={running}
+              loading={runningOp === "sync-all"}
+              loadingLabel="Importing all years…"
+              onClick={() => void runFullSyncAllYears()}
+              primary
+            >
+              Download all years (new only)
+            </ActionButton>
+          </div>
+          {allYearsProgress && (
+            <div className="mt-4">
+              <ProgressBar
+                label="Years completed"
+                value={progressPercent(
+                  allYearsProgress.index,
+                  allYearsProgress.total,
+                )}
+                detail={`${allYearsProgress.year} (${allYearsProgress.index}/${allYearsProgress.total})`}
+              />
+            </div>
+          )}
         </div>
 
         <div className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-5 shadow-2xl shadow-black/30 backdrop-blur-sm sm:p-7">

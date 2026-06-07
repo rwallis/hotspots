@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import HotspotMapClient from "@/components/HotspotMapClient";
+import MapHelpCard, { readMapHelpDismissed } from "@/components/MapHelpCard";
 import {
   sourceTypeBadge,
   themeForSourceIndex,
@@ -26,6 +27,15 @@ export default function Explorer() {
   const [years, setYears] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mapHelpMounted, setMapHelpMounted] = useState(false);
+  const [showMapHelp, setShowMapHelp] = useState(false);
+
+  useEffect(() => {
+    setMapHelpMounted(true);
+    if (!readMapHelpDismissed()) {
+      setShowMapHelp(true);
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -213,6 +223,13 @@ export default function Explorer() {
               </div>
 
               <div className="flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setShowMapHelp(true)}
+                  className={btnSecondary}
+                >
+                  Guide
+                </button>
                 <a href="/help" className={btnSecondary}>
                   Help
                 </a>
@@ -418,7 +435,7 @@ export default function Explorer() {
           {!showList ? (
             <div className="relative min-h-[calc(100dvh-5.5rem)] flex-1 sm:min-h-[calc(100dvh-6rem)]">
               <div className="absolute inset-0 p-1.5 sm:p-3">
-                <div className="h-full overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40 shadow-xl shadow-black/20 sm:rounded-3xl">
+                <div className="relative h-full overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40 shadow-xl shadow-black/20 sm:rounded-3xl">
                   <HotspotMapClient
                     hotspots={filteredHotspots}
                     fullHeight
@@ -428,6 +445,13 @@ export default function Explorer() {
                   />
                 </div>
               </div>
+              {mapHelpMounted && showMapHelp && (
+                <div className="absolute inset-0 z-[1100] p-1.5 sm:p-3">
+                  <div className="relative h-full overflow-hidden rounded-2xl sm:rounded-3xl">
+                    <MapHelpCard onDismiss={() => setShowMapHelp(false)} />
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-3 p-2 sm:grid sm:grid-cols-[minmax(260px,340px)_1fr] sm:gap-4 sm:p-3">
