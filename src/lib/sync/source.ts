@@ -53,16 +53,18 @@ export function getDefaultClubSource(): SyncSource {
 export function normalizeSyncSource(
   input?: Partial<SyncSource> | null,
 ): SyncSource {
+  const id = input?.id;
   if (
     input?.type &&
     (input.type === "club" || input.type === "airport") &&
-    Number.isFinite(input.id) &&
-    input.id > 0
+    typeof id === "number" &&
+    Number.isFinite(id) &&
+    id > 0
   ) {
     return {
       type: input.type,
-      id: input.id,
-      label: input.label?.trim() || `${input.type} ${input.id}`,
+      id,
+      label: input.label?.trim() || `${input.type} ${id}`,
     };
   }
   return getDefaultClubSource();
