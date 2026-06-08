@@ -44,7 +44,7 @@ export default function HelpPage() {
               <li>
                 <strong className="text-slate-100">Click a circle</strong> to open a popup with
                 climb rate, top of lift, occurrence count, pilots, years, and a list of thermals
-                with start/end time and altitude.
+                with start/end altitude and duration in minutes.
               </li>
               <li>
                 Use the map controls (bottom-right) to switch between street, satellite,

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { formatThermalDateTime } from "@/lib/format/thermal-time";
 import type { ThermalDto } from "@/types";
 
 type RouteContext = {
@@ -72,8 +71,6 @@ export async function GET(request: Request, context: RouteContext) {
         avgClimbFpm: thermal.avgClimbFpm,
         startAltFt: thermal.startAltFt,
         endAltFt: thermal.altFt,
-        startTime: formatThermalDateTime(flightDate, thermal.startTimeSec),
-        endTime: formatThermalDateTime(flightDate, thermal.endTimeSec),
         durationSec: thermal.durationSec,
         flightDate: dateLabel,
         flight: `${dateLabel} ${thermal.pilotName}${idSuffix}`,

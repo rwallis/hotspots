@@ -14,6 +14,13 @@ function formatAlt(ft: number | null): string {
   return `${Math.round(ft).toLocaleString()} ft`;
 }
 
+function formatDurationMin(durationSec: number): string {
+  if (!Number.isFinite(durationSec) || durationSec <= 0) return "—";
+  const minutes = durationSec / 60;
+  if (minutes < 10) return `${minutes.toFixed(1)} min`;
+  return `${Math.round(minutes)} min`;
+}
+
 export default function HotspotThermalsList({
   hotspotId,
   year,
@@ -94,12 +101,13 @@ export default function HotspotThermalsList({
                 : ""}
             </div>
             <div className={muted}>
-              <span className={label}>Start:</span>{" "}
-              {thermal.startTime ?? "—"} · {formatAlt(thermal.startAltFt)}
+              <span className={label}>Start alt:</span> {formatAlt(thermal.startAltFt)}
+              {" · "}
+              <span className={label}>End alt:</span> {formatAlt(thermal.endAltFt)}
             </div>
             <div className={muted}>
-              <span className={label}>End:</span>{" "}
-              {thermal.endTime ?? "—"} · {formatAlt(thermal.endAltFt)}
+              <span className={label}>Duration:</span>{" "}
+              {formatDurationMin(thermal.durationSec)}
             </div>
           </li>
         ))}

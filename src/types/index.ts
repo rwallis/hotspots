@@ -7,8 +7,6 @@ export type ThermalDto = {
   avgClimbFpm: number | null;
   startAltFt: number | null;
   endAltFt: number | null;
-  startTime: string | null;
-  endTime: string | null;
   durationSec: number;
   flightDate: string;
   flight: string;
