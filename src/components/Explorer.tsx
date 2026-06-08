@@ -24,6 +24,8 @@ export default function Explorer() {
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [minOccurrences, setMinOccurrences] = useState(1);
   const [minClimbKts, setMinClimbKts] = useState(0);
+  const [minTopAltFt, setMinTopAltFt] = useState(0);
+  const [maxTopAltFt, setMaxTopAltFt] = useState(0);
   const [hotspots, setHotspots] = useState<HotspotDto[]>([]);
   const [sources, setSources] = useState<SourceWithPilotsDto[]>([]);
   const [years, setYears] = useState<number[]>([]);
@@ -121,6 +123,12 @@ export default function Explorer() {
     return hotspots.filter((hotspot) => {
       if (hotspot.count < minOccurrences) return false;
       if (hotspot.avgClimbKts < minClimbKts) return false;
+      if (minTopAltFt > 0) {
+        if (hotspot.topAltFt == null || hotspot.topAltFt < minTopAltFt) return false;
+      }
+      if (maxTopAltFt > 0) {
+        if (hotspot.topAltFt == null || hotspot.topAltFt > maxTopAltFt) return false;
+      }
       if (
         allowedPilotSet &&
         !hotspot.pilots.some((pilot) => allowedPilotSet.has(pilot))
@@ -129,7 +137,14 @@ export default function Explorer() {
       }
       return true;
     });
-  }, [hotspots, allowedPilotSet, minOccurrences, minClimbKts]);
+  }, [
+    hotspots,
+    allowedPilotSet,
+    minOccurrences,
+    minClimbKts,
+    minTopAltFt,
+    maxTopAltFt,
+  ]);
 
   useEffect(() => {
     const validKeys = new Set(sources.map((source) => source.sourceKey));
@@ -177,6 +192,8 @@ export default function Explorer() {
     setSelectedPilots([]);
     setMinOccurrences(1);
     setMinClimbKts(0);
+    setMinTopAltFt(0);
+    setMaxTopAltFt(0);
     setSelectedHotspotId(null);
   }
 
@@ -184,7 +201,30 @@ export default function Explorer() {
     selectedSourceKeys.length > 0 ||
     selectedPilots.length > 0 ||
     minOccurrences > 1 ||
-    minClimbKts > 0;
+    minClimbKts > 0 ||
+    minTopAltFt > 0 ||
+    maxTopAltFt > 0;
+
+  const strengthFilterActive =
+    minOccurrences > 1 ||
+    minClimbKts > 0 ||
+    minTopAltFt > 0 ||
+    maxTopAltFt > 0;
+
+  const strengthFilterLabel = (() => {
+    if (!strengthFilterActive) return "";
+    const parts: string[] = [];
+    if (minOccurrences > 1) parts.push(`≥${minOccurrences}`);
+    if (minClimbKts > 0) parts.push(`${minClimbKts}+ kt`);
+    if (minTopAltFt > 0 && maxTopAltFt > 0) {
+      parts.push(`${minTopAltFt.toLocaleString()}-${maxTopAltFt.toLocaleString()} ft`);
+    } else if (minTopAltFt > 0) {
+      parts.push(`≥${minTopAltFt.toLocaleString()} ft`);
+    } else if (maxTopAltFt > 0) {
+      parts.push(`≤${maxTopAltFt.toLocaleString()} ft`);
+    }
+    return parts.join(" · ");
+  })();
 
   const statusText = loading
     ? "Loading…"
@@ -282,11 +322,9 @@ export default function Explorer() {
                       {selectedSourceKeys.length} src
                     </span>
                   )}
-                  {(minOccurrences > 1 || minClimbKts > 0) && (
+                  {strengthFilterActive && (
                     <span className="rounded-full bg-violet-500/20 px-1.5 py-0.5 font-medium text-violet-300">
-                      {minOccurrences > 1 ? `≥${minOccurrences}` : ""}
-                      {minOccurrences > 1 && minClimbKts > 0 ? " · " : ""}
-                      {minClimbKts > 0 ? `${minClimbKts}+ kt` : ""}
+                      {strengthFilterLabel}
                     </span>
                   )}
                   <svg
@@ -366,6 +404,46 @@ export default function Explorer() {
                       className="w-14 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-16 sm:text-sm"
                     />
                     <span className="text-[10px] text-slate-500">kt</span>
+                  </label>
+
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span className="whitespace-nowrap font-medium">Min top</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={50000}
+                      step={100}
+                      value={minTopAltFt || ""}
+                      placeholder="0"
+                      onChange={(event) => {
+                        const next = Math.max(0, Number(event.target.value) || 0);
+                        setMinTopAltFt(next);
+                        setSelectedHotspotId(null);
+                      }}
+                      aria-label="Minimum top of thermal altitude in feet"
+                      className="w-16 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-[4.5rem] sm:text-sm"
+                    />
+                    <span className="text-[10px] text-slate-500">ft</span>
+                  </label>
+
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span className="whitespace-nowrap font-medium">Max top</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={50000}
+                      step={100}
+                      value={maxTopAltFt || ""}
+                      placeholder="0"
+                      onChange={(event) => {
+                        const next = Math.max(0, Number(event.target.value) || 0);
+                        setMaxTopAltFt(next);
+                        setSelectedHotspotId(null);
+                      }}
+                      aria-label="Maximum top of thermal altitude in feet"
+                      className="w-16 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-[4.5rem] sm:text-sm"
+                    />
+                    <span className="text-[10px] text-slate-500">ft</span>
                   </label>
 
                   <span className="hidden h-4 w-px bg-slate-700 sm:block" />
