@@ -15,6 +15,10 @@ const btnSecondary =
 const btnPrimary =
   "inline-flex items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-sky-600 px-3.5 py-1.5 text-xs font-semibold text-slate-950 shadow-md shadow-sky-500/20 transition hover:from-sky-300 hover:to-sky-500 sm:px-4 sm:py-2 sm:text-sm";
 
+function climbKtsToFpm(kts: number): number {
+  return (kts / 1.94384) * 3.28084 * 60;
+}
+
 export default function Explorer() {
   const [showList, setShowList] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -23,9 +27,8 @@ export default function Explorer() {
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [minOccurrences, setMinOccurrences] = useState(1);
-  const [minClimbKts, setMinClimbKts] = useState(0);
+  const [minClimbFpm, setMinClimbFpm] = useState(0);
   const [minTopAltFt, setMinTopAltFt] = useState(0);
-  const [maxTopAltFt, setMaxTopAltFt] = useState(0);
   const [hotspots, setHotspots] = useState<HotspotDto[]>([]);
   const [sources, setSources] = useState<SourceWithPilotsDto[]>([]);
   const [years, setYears] = useState<number[]>([]);
@@ -122,12 +125,9 @@ export default function Explorer() {
   const filteredHotspots = useMemo(() => {
     return hotspots.filter((hotspot) => {
       if (hotspot.count < minOccurrences) return false;
-      if (hotspot.avgClimbKts < minClimbKts) return false;
+      if (minClimbFpm > 0 && climbKtsToFpm(hotspot.avgClimbKts) < minClimbFpm) return false;
       if (minTopAltFt > 0) {
         if (hotspot.topAltFt == null || hotspot.topAltFt < minTopAltFt) return false;
-      }
-      if (maxTopAltFt > 0) {
-        if (hotspot.topAltFt == null || hotspot.topAltFt > maxTopAltFt) return false;
       }
       if (
         allowedPilotSet &&
@@ -141,9 +141,8 @@ export default function Explorer() {
     hotspots,
     allowedPilotSet,
     minOccurrences,
-    minClimbKts,
+    minClimbFpm,
     minTopAltFt,
-    maxTopAltFt,
   ]);
 
   useEffect(() => {
@@ -191,9 +190,8 @@ export default function Explorer() {
     setSelectedSourceKeys([]);
     setSelectedPilots([]);
     setMinOccurrences(1);
-    setMinClimbKts(0);
+    setMinClimbFpm(0);
     setMinTopAltFt(0);
-    setMaxTopAltFt(0);
     setSelectedHotspotId(null);
   }
 
@@ -201,28 +199,20 @@ export default function Explorer() {
     selectedSourceKeys.length > 0 ||
     selectedPilots.length > 0 ||
     minOccurrences > 1 ||
-    minClimbKts > 0 ||
-    minTopAltFt > 0 ||
-    maxTopAltFt > 0;
+    minClimbFpm > 0 ||
+    minTopAltFt > 0;
 
   const strengthFilterActive =
     minOccurrences > 1 ||
-    minClimbKts > 0 ||
-    minTopAltFt > 0 ||
-    maxTopAltFt > 0;
+    minClimbFpm > 0 ||
+    minTopAltFt > 0;
 
   const strengthFilterLabel = (() => {
     if (!strengthFilterActive) return "";
     const parts: string[] = [];
     if (minOccurrences > 1) parts.push(`≥${minOccurrences}`);
-    if (minClimbKts > 0) parts.push(`${minClimbKts}+ kt`);
-    if (minTopAltFt > 0 && maxTopAltFt > 0) {
-      parts.push(`${minTopAltFt.toLocaleString()}-${maxTopAltFt.toLocaleString()} ft`);
-    } else if (minTopAltFt > 0) {
-      parts.push(`≥${minTopAltFt.toLocaleString()} ft`);
-    } else if (maxTopAltFt > 0) {
-      parts.push(`≤${maxTopAltFt.toLocaleString()} ft`);
-    }
+    if (minClimbFpm > 0) parts.push(`${minClimbFpm}+ fpm`);
+    if (minTopAltFt > 0) parts.push(`ToL ≥${minTopAltFt.toLocaleString()} ft`);
     return parts.join(" · ");
   })();
 
@@ -388,26 +378,26 @@ export default function Explorer() {
                   </label>
 
                   <label className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <span className="whitespace-nowrap font-medium">Min climb</span>
+                    <span className="whitespace-nowrap font-medium">Min fpm</span>
                     <input
                       type="number"
                       min={0}
-                      max={15}
-                      step={0.5}
-                      value={minClimbKts}
+                      max={3000}
+                      step={50}
+                      value={minClimbFpm || ""}
+                      placeholder="0"
                       onChange={(event) => {
                         const next = Math.max(0, Number(event.target.value) || 0);
-                        setMinClimbKts(next);
+                        setMinClimbFpm(next);
                         setSelectedHotspotId(null);
                       }}
-                      aria-label="Minimum climb rate in knots"
-                      className="w-14 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-16 sm:text-sm"
+                      aria-label="Minimum climb rate in feet per minute"
+                      className="w-16 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-[4.5rem] sm:text-sm"
                     />
-                    <span className="text-[10px] text-slate-500">kt</span>
                   </label>
 
                   <label className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <span className="whitespace-nowrap font-medium">Min top</span>
+                    <span className="whitespace-nowrap font-medium">Min ToL</span>
                     <input
                       type="number"
                       min={0}
@@ -420,27 +410,7 @@ export default function Explorer() {
                         setMinTopAltFt(next);
                         setSelectedHotspotId(null);
                       }}
-                      aria-label="Minimum top of thermal altitude in feet"
-                      className="w-16 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-[4.5rem] sm:text-sm"
-                    />
-                    <span className="text-[10px] text-slate-500">ft</span>
-                  </label>
-
-                  <label className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <span className="whitespace-nowrap font-medium">Max top</span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={50000}
-                      step={100}
-                      value={maxTopAltFt || ""}
-                      placeholder="0"
-                      onChange={(event) => {
-                        const next = Math.max(0, Number(event.target.value) || 0);
-                        setMaxTopAltFt(next);
-                        setSelectedHotspotId(null);
-                      }}
-                      aria-label="Maximum top of thermal altitude in feet"
+                      aria-label="Minimum top of lift altitude in feet"
                       className="w-16 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-[4.5rem] sm:text-sm"
                     />
                     <span className="text-[10px] text-slate-500">ft</span>

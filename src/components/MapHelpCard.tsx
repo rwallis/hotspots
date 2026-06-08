@@ -90,8 +90,8 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
                 year or all years.
               </li>
               <li>
-                <strong className="text-slate-100">Min occurs / Min climb / Top ft</strong> hide
-                weak or out-of-range hotspots — e.g. 3+ occurrences, 2+ kt, and 3,000–6,000 ft top.
+                <strong className="text-slate-100">Min occurs / Min fpm / Min ToL</strong> hide
+                weak or low hotspots — e.g. 3+ occurrences, 200+ fpm, and 3,000+ ft top of lift.
               </li>
               <li>
                 <strong className="text-slate-100">Club / airport pills</strong> filter by source;
