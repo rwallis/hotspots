@@ -83,3 +83,21 @@ export type SourceWithPilotsDto = {
   pilots: string[];
   flightCount: number;
 };
+
+export type OgnAircraftDto = {
+  id: string;
+  lat: number;
+  lon: number;
+  callsign: string;
+  anonymous: boolean;
+  addrType: string;
+  altM: number | null;
+  altFt: number | null;
+  climbMps: number | null;
+  climbFpm: number | null;
+  groundSpeedKmh: number | null;
+  trackDeg: number | null;
+  receiver: string;
+  time: string;
+  aircraftTypeCode: number | null;
+};

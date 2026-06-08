@@ -69,6 +69,13 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
             <h3 className="text-sm font-bold text-amber-300">What&apos;s new</h3>
             <ul className="mt-2 space-y-2 text-xs leading-relaxed text-slate-300 sm:text-sm">
               <li>
+                <strong className="text-slate-100">Live OGN traffic</strong> — turn on{" "}
+                <strong className="text-slate-100">Live OGN traffic</strong> in map controls to
+                see gliders flying now. Icons are color-coded (dark green = climbing, dark blue =
+                cruise, dark orange = sinking) with callsigns like S2H beside each glider. Data
+                from the Open Glider Network; not stored in Hotspots.
+              </li>
+              <li>
                 <strong className="text-slate-100">Smarter filters</strong> — Min occurs, Min
                 fpm, Min ToL, and Min gain (ft) in the header. Combine them to find repeatable,
                 strong, high-base thermals.
@@ -98,7 +105,13 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
                 <ul className="mt-1.5 list-inside list-disc space-y-1 text-slate-400">
                   <li>Colored circles are thermal hotspots — places multiple flights found lift.</li>
                   <li>Bigger circles generally mean stronger average climb.</li>
-                  <li>Use map controls (bottom-right) for basemap and hotspot visibility.</li>
+                  <li>
+                    Enable <strong className="text-slate-300">Live OGN traffic</strong> to overlay
+                    real-time gliders from the Open Glider Network. Gliders show as streamlined
+                    icons with callsign labels; color indicates climb (green), cruise (blue), or
+                    sink (orange).
+                  </li>
+                  <li>Use map controls (bottom-right) for basemap, hotspots, and live traffic.</li>
                 </ul>
               </div>
               <div>

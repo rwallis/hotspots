@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { Circle, MapContainer, Popup, TileLayer } from "react-leaflet";
 import HotspotThermalsList from "@/components/HotspotThermalsList";
+import OgnLiveLayer from "@/components/OgnLiveLayer";
 import type { HotspotDto } from "@/types";
 
 type Props = {
@@ -41,6 +42,13 @@ export default function HotspotMap({
 }: Props) {
   const [base, setBase] = useState<BaseLayer>("topo");
   const [showHotspots, setShowHotspots] = useState(true);
+  const [showLive, setShowLive] = useState(false);
+  const [liveStatus, setLiveStatus] = useState({
+    count: 0,
+    loading: false,
+    error: null as string | null,
+    fetchedAt: null as string | null,
+  });
 
   const selected = useMemo(
     () => hotspots.find((hotspot) => hotspot.id === selectedHotspotId) ?? null,
@@ -112,6 +120,8 @@ export default function HotspotMap({
         scrollWheelZoom
       >
         <TileLayer url={tile.url} attribution={tile.attribution} maxZoom={tile.maxZoom} />
+
+        <OgnLiveLayer enabled={showLive} onStatusChange={setLiveStatus} />
 
         {showHotspots &&
           hotspots.map((hotspot) => {
@@ -227,9 +237,62 @@ export default function HotspotMap({
               />
               Show hotspots
             </label>
+            <label
+              className={[
+                "mt-1 flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1 text-xs font-medium",
+                darkChrome ? "text-slate-300" : "text-slate-700",
+              ].join(" ")}
+            >
+              <input
+                type="checkbox"
+                checked={showLive}
+                onChange={(event) => setShowLive(event.target.checked)}
+                className="h-3.5 w-3.5 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500/40"
+              />
+              Live OGN traffic
+            </label>
+            {showLive && (
+              <>
+                <p
+                  className={[
+                    "px-1 text-[10px] leading-snug",
+                    liveStatus.error
+                      ? "text-amber-400"
+                      : darkChrome
+                        ? "text-slate-500"
+                        : "text-slate-500",
+                  ].join(" ")}
+                >
+                  {liveStatus.error
+                    ? liveStatus.error
+                    : liveStatus.loading && liveStatus.count === 0
+                      ? "Loading live traffic…"
+                      : `${liveStatus.count} glider${liveStatus.count === 1 ? "" : "s"} in view`}
+                </p>
+                <div
+                  className={[
+                    "mt-1 flex flex-wrap gap-x-2 gap-y-1 px-1 text-[9px] font-semibold uppercase tracking-wide",
+                    darkChrome ? "text-slate-500" : "text-slate-500",
+                  ].join(" ")}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-emerald-700" />
+                    Climbing
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-sky-700" />
+                    Cruise
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-orange-700" />
+                    Sink
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
-          {hotspots.length > 0 && (
+          {(hotspots.length > 0 || showLive) && (
             <div
               className={[
                 "rounded-xl border px-3 py-2 text-center text-xs font-medium shadow-lg backdrop-blur-md sm:text-left",
@@ -238,7 +301,24 @@ export default function HotspotMap({
                   : "border-white/80 bg-white/90 text-slate-600",
               ].join(" ")}
             >
-              {hotspots.length} hotspot{hotspots.length === 1 ? "" : "s"} on map
+              {hotspots.length > 0 && (
+                <div>
+                  {hotspots.length} hotspot{hotspots.length === 1 ? "" : "s"} on map
+                </div>
+              )}
+              {showLive && (
+                <div className={hotspots.length > 0 ? "mt-0.5" : ""}>
+                  Live data ©{" "}
+                  <a
+                    href="https://www.glidernet.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sky-500 hover:underline"
+                  >
+                    Open Glider Network
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </div>

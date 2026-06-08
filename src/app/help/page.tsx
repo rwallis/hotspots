@@ -37,6 +37,24 @@ export default function HelpPage() {
             <h2 className="text-lg font-bold text-amber-300">What&apos;s new</h2>
             <ul className="mt-3 space-y-2.5 text-sm leading-relaxed text-slate-300">
               <li>
+                <strong className="text-slate-100">Live OGN traffic</strong> — enable{" "}
+                <strong className="text-slate-100">Live OGN traffic</strong> in the map controls
+                (bottom-right) to see gliders flying in your map view. Each glider appears as a
+                streamlined top-down icon with its callsign (e.g. S2H, MG) floating beside it.
+                Dark green = climbing, dark blue = level/cruise, dark orange = sinking. Click a
+                glider for altitude, climb, speed, and last update. Live positions refresh every
+                few seconds and are not saved to the Hotspots database. Data ©{" "}
+                <a
+                  href="https://www.glidernet.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-400 hover:underline"
+                >
+                  Open Glider Network
+                </a>
+                .
+              </li>
+              <li>
                 <strong className="text-slate-100">Header filters</strong> — Min occurs, Min fpm,
                 Min ToL, and Min gain (ft) let you narrow hotspots by strength, height, and how
                 repeatable they are.
@@ -72,7 +90,8 @@ export default function HelpPage() {
               </li>
               <li>
                 Use the map controls (bottom-right) to switch between street, satellite,
-                topo, and dark basemaps, or toggle hotspots on and off.
+                topo, and dark basemaps; toggle historical hotspots; and turn{" "}
+                <strong className="text-slate-100">Live OGN traffic</strong> on or off.
               </li>
               <li>
                 Pinch or scroll to zoom. Drag to pan around the flying area.
@@ -134,6 +153,47 @@ export default function HelpPage() {
           </section>
 
           <section className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-5 shadow-xl backdrop-blur-sm sm:p-6">
+            <h2 className="text-lg font-bold text-emerald-300">Live OGN traffic</h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">
+              Hotspots can overlay real-time glider positions from the{" "}
+              <strong className="text-slate-100">Open Glider Network (OGN)</strong>. This is
+              separate from historical hotspot analysis — live tracks are shown only on the map
+              and are not imported or stored.
+            </p>
+            <ul className="mt-3 space-y-2.5 text-sm leading-relaxed text-slate-300">
+              <li>
+                Open map controls (bottom-right) and check{" "}
+                <strong className="text-slate-100">Live OGN traffic</strong>. The status line
+                shows how many gliders are in the current map view.
+              </li>
+              <li>
+                Gliders appear as rotated sailplane icons with a{" "}
+                <strong className="text-slate-100">callsign label</strong> beside them (e.g. S2H,
+                MG). Anonymous aircraft show as <strong className="text-slate-100">?</strong> per
+                OGN privacy rules.
+              </li>
+              <li>
+                <strong className="text-slate-100">Color coding:</strong> dark green = climbing,
+                dark blue = cruise/level, dark orange = sinking. A short colored trail may appear
+                behind each glider as positions update.
+              </li>
+              <li>
+                Pan or zoom to load traffic for that area. Coverage depends on nearby OGN ground
+                receivers — sparse regions may show few or no gliders.
+              </li>
+              <li>
+                Click a glider icon for a popup with altitude, climb rate, ground speed, and last
+                report time.
+              </li>
+            </ul>
+            <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5 text-xs leading-relaxed text-slate-400 sm:text-sm">
+              Live data is provided under the OGN data usage policy (ODbL). Hotspots displays it
+              for situational awareness only — it does not replace a certified traffic or
+              collision-avoidance system.
+            </p>
+          </section>
+
+          <section className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-5 shadow-xl backdrop-blur-sm sm:p-6">
             <h2 className="text-lg font-bold text-amber-300">List view</h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-300">
               Click <strong className="text-slate-100">List</strong> to open a scrollable hotspot
@@ -163,6 +223,10 @@ export default function HelpPage() {
               <li>Year, Min occurs, Min fpm, Min gain, Min ToL, source, and pilot filters all apply together.</li>
               <li>The hotspot count in the header updates as you filter.</li>
               <li>On mobile, tap Filters in the header to expand the filter bar.</li>
+              <li>
+                Live OGN traffic and historical hotspots can be shown together or independently
+                using the checkboxes in map controls.
+              </li>
             </ul>
           </section>
         </div>
