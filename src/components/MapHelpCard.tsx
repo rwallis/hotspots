@@ -73,8 +73,8 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
                 where multiple flights found lift.
               </li>
               <li>
-                <strong className="text-slate-100">Click a circle</strong> for climb rate, count,
-                pilots, and years.
+                <strong className="text-slate-100">Click a circle</strong> for climb rate, top of
+                lift (ToL), occurrence count, pilots, and years.
               </li>
               <li>
                 Use map controls (bottom-right) for basemap and hotspot visibility.
@@ -86,19 +86,26 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
             <h3 className="text-sm font-bold text-violet-300">Filters</h3>
             <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-slate-300 sm:text-sm">
               <li>
-                <strong className="text-slate-100">Year</strong> limits hotspots to one calendar
-                year or all years.
+                <strong className="text-slate-100">Year</strong> — one calendar year or all years.
               </li>
               <li>
-                <strong className="text-slate-100">Min occurs / Min fpm / Min ToL</strong> hide
-                weak or low hotspots — e.g. 3+ occurrences, 200+ fpm, and 3,000+ ft top of lift.
+                <strong className="text-slate-100">Min occurs</strong> — minimum times a hotspot
+                was hit (default 1). Try 3+ to drop one-off dots.
               </li>
               <li>
-                <strong className="text-slate-100">Club / airport pills</strong> filter by source;
-                pilot pills appear when a source is selected.
+                <strong className="text-slate-100">Min fpm</strong> — minimum average climb in
+                feet per minute (0 = any). Try 200+ for solid lift.
               </li>
               <li>
-                Tap <strong className="text-slate-100">Clear</strong> to reset filters.
+                <strong className="text-slate-100">Min ToL</strong> — minimum top-of-lift altitude
+                in feet MSL (0 = any). Hides low-altitude thermals.
+              </li>
+              <li>
+                <strong className="text-slate-100">Club / airport pills</strong> — filter by
+                source; pilot pills appear when a source is selected.
+              </li>
+              <li>
+                All filters combine. Tap <strong className="text-slate-100">Clear</strong> to reset.
               </li>
             </ul>
           </section>
