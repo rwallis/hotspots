@@ -74,7 +74,7 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
               </li>
               <li>
                 <strong className="text-slate-100">Click a circle</strong> for climb rate, top of
-                lift (ToL), occurrence count, pilots, and years.
+                lift, occurrence count, pilots, years, and per-thermal start/end time and altitude.
               </li>
               <li>
                 Use map controls (bottom-right) for basemap and hotspot visibility.

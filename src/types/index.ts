@@ -5,7 +5,12 @@ export type ThermalDto = {
   pilot: string;
   avgClimbKts: number;
   avgClimbFpm: number | null;
-  altFt: number | null;
+  startAltFt: number | null;
+  endAltFt: number | null;
+  startTime: string | null;
+  endTime: string | null;
+  durationSec: number;
+  flightDate: string;
   flight: string;
   year: number;
 };
@@ -56,6 +61,10 @@ export type TrackPoint = {
 export type DetectedThermal = {
   lat: number;
   lon: number;
+  startAltFt: number;
+  endAltFt: number;
+  startTimeSec: number;
+  endTimeSec: number;
   avgClimbKts: number;
   avgClimbFpm: number;
   altFt: number;

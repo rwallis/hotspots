@@ -1,8 +1,12 @@
-[phases.setup]
-nixPkgs = ["nodejs_20"]
+# Node version comes from .node-version — do not override [phases.setup] or
+# nixpacks drops default packages (openssl, etc.) needed for native deps.
 
 [phases.install]
 cmds = ["npm install --include=dev --no-audit --no-fund"]
 
 [phases.build]
 cmds = ["npm run build"]
+
+[variables]
+# Prisma/Next only need a placeholder at build time (real URL is set at deploy).
+DATABASE_URL = "postgresql://build:build@localhost:5432/build"

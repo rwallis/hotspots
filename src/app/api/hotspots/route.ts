@@ -11,7 +11,6 @@ export async function GET(request: Request) {
 
     const hotspots = await prisma.hotspot.findMany({
       where: {
-        avgClimbKts: { lte: 15 },
         ...(year ? { years: { has: year } } : {}),
         ...(pilot ? { pilotNames: { has: pilot } } : {}),
       },

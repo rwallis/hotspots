@@ -1,3 +1,6 @@
+import {
+  thermalMetricsFromMeters,
+} from "@/lib/analysis/climb";
 import type { DetectedThermal, TrackPoint } from "@/types";
 
 const MIN_CLIMB_KTS = 1;
@@ -8,12 +11,7 @@ const MS_TO_KTS = 1.94384;
 
 function climbRateKts(deltaAltM: number, deltaSec: number): number {
   if (deltaSec <= 0) return 0;
-  return ((deltaAltM / deltaSec) * MS_TO_KTS);
-}
-
-function climbRateFpm(deltaAltM: number, deltaSec: number): number {
-  if (deltaSec <= 0) return 0;
-  return ((deltaAltM / deltaSec) * METERS_TO_FEET * 60);
+  return (deltaAltM / deltaSec) * MS_TO_KTS;
 }
 
 export function detectThermals(points: TrackPoint[]): DetectedThermal[] {
@@ -42,14 +40,12 @@ export function detectThermals(points: TrackPoint[]): DetectedThermal[] {
         const gainFt = (end.altM - start.altM) * METERS_TO_FEET;
 
         if (durationSec >= MIN_DURATION_SEC && gainFt >= MIN_GAIN_FT) {
-          const avgClimbKts =
-            segment
-              .slice(1)
-              .reduce((sum, point, idx) => {
-                const prior = segment[idx];
-                const dt = point.timeSec - prior.timeSec;
-                return sum + climbRateKts(point.altM - prior.altM, dt);
-              }, 0) / Math.max(segment.length - 1, 1);
+          const metrics = thermalMetricsFromMeters(
+            start.altM,
+            end.altM,
+            durationSec,
+          );
+          if (!metrics) continue;
 
           const centroid = segment.reduce(
             (acc, point) => ({
@@ -62,10 +58,14 @@ export function detectThermals(points: TrackPoint[]): DetectedThermal[] {
           thermals.push({
             lat: centroid.lat / segment.length,
             lon: centroid.lon / segment.length,
-            avgClimbKts,
-            avgClimbFpm: climbRateFpm(end.altM - start.altM, durationSec),
-            altFt: end.altM * METERS_TO_FEET,
-            durationSec,
+            startAltFt: metrics.startAltFt,
+            endAltFt: metrics.endAltFt,
+            startTimeSec: start.timeSec,
+            endTimeSec: end.timeSec,
+            altFt: metrics.endAltFt,
+            avgClimbKts: metrics.avgClimbKts,
+            avgClimbFpm: metrics.avgClimbFpm,
+            durationSec: metrics.durationSec,
           });
         }
       }

@@ -550,6 +550,7 @@ export default function Explorer() {
                     darkChrome
                     selectedHotspotId={selectedHotspotId}
                     onSelectHotspot={setSelectedHotspotId}
+                    filterYear={selectedYear}
                   />
                 </div>
               </div>
@@ -635,6 +636,7 @@ export default function Explorer() {
                     darkChrome
                     selectedHotspotId={selectedHotspotId}
                     onSelectHotspot={setSelectedHotspotId}
+                    filterYear={selectedYear}
                   />
                 </div>
               </div>

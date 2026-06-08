@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { Circle, MapContainer, Popup, TileLayer } from "react-leaflet";
+import HotspotThermalsList from "@/components/HotspotThermalsList";
 import type { HotspotDto } from "@/types";
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
   darkChrome?: boolean;
   selectedHotspotId?: string | null;
   onSelectHotspot?: (id: string | null) => void;
+  filterYear?: string;
 };
 
 type BaseLayer = "street" | "satellite" | "topo" | "dark";
@@ -35,6 +37,7 @@ export default function HotspotMap({
   darkChrome = false,
   selectedHotspotId,
   onSelectHotspot,
+  filterYear = "all",
 }: Props) {
   const [base, setBase] = useState<BaseLayer>("topo");
   const [showHotspots, setShowHotspots] = useState(true);
@@ -138,7 +141,7 @@ export default function HotspotMap({
             position={[selected.lat, selected.lon]}
             eventHandlers={{ remove: () => onSelectHotspot?.(null) }}
           >
-            <div className="min-w-[180px] space-y-1.5 text-sm">
+            <div className="min-w-[220px] max-w-[280px] space-y-1.5 text-sm">
               <div className="text-base font-bold text-slate-900">{selected.name}</div>
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-bold text-sky-800">
@@ -150,7 +153,7 @@ export default function HotspotMap({
               </div>
               {selected.topAltFt != null && (
                 <div className="text-xs text-slate-600">
-                  <span className="font-medium text-slate-700">Top of thermal:</span>{" "}
+                  <span className="font-medium text-slate-700">Top of lift:</span>{" "}
                   {Math.round(selected.topAltFt).toLocaleString()} ft MSL
                 </div>
               )}
@@ -162,12 +165,10 @@ export default function HotspotMap({
                 <span className="font-medium text-slate-700">Years:</span>{" "}
                 {selected.years.join(", ")}
               </div>
-              {selected.flights?.length ? (
-                <div className="max-w-[220px] border-t border-slate-100 pt-1.5 text-xs text-slate-500">
-                  {selected.flights.slice(0, 3).join(", ")}
-                  {selected.flights.length > 3 ? "…" : ""}
-                </div>
-              ) : null}
+              <HotspotThermalsList
+                hotspotId={selected.id}
+                year={filterYear}
+              />
             </div>
           </Popup>
         )}

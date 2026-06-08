@@ -20,6 +20,7 @@ type Props = {
   darkChrome?: boolean;
   selectedHotspotId?: string | null;
   onSelectHotspot?: (id: string | null) => void;
+  filterYear?: string;
 };
 
 export default function HotspotMapClient(props: Props) {
