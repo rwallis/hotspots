@@ -18,10 +18,10 @@ export default function HelpPage() {
               </p>
             </div>
             <h1 className="mt-1.5 text-2xl font-bold tracking-tight sm:text-3xl">
-              How to use the map
+              What&apos;s new &amp; help guide
             </h1>
             <p className="mt-1 text-sm text-slate-400">
-              Explore thermal hotspots built from stored gliding flights.
+              Recent updates, then how to explore thermal hotspots from club flights.
             </p>
           </div>
           <a
@@ -33,8 +33,32 @@ export default function HelpPage() {
         </div>
 
         <div className="space-y-4">
+          <section className="rounded-3xl border border-amber-500/25 bg-amber-500/5 p-5 shadow-xl backdrop-blur-sm sm:p-6">
+            <h2 className="text-lg font-bold text-amber-300">What&apos;s new</h2>
+            <ul className="mt-3 space-y-2.5 text-sm leading-relaxed text-slate-300">
+              <li>
+                <strong className="text-slate-100">Header filters</strong> — Min occurs, Min fpm,
+                Min ToL, and Min gain (ft) let you narrow hotspots by strength, height, and how
+                repeatable they are.
+              </li>
+              <li>
+                <strong className="text-slate-100">Thermal details</strong> — hotspot popups list
+                individual thermals with start/end altitude, gain, duration in minutes, and climb
+                rate.
+              </li>
+              <li>
+                <strong className="text-slate-100">Climb calculation</strong> — average lift uses
+                start altitude, end altitude, and elapsed time only.
+              </li>
+              <li>
+                <strong className="text-slate-100">Club coverage</strong> — Fault Line Flyers and
+                Chicago Glider Club WeGlide flights, with club and pilot filters.
+              </li>
+            </ul>
+          </section>
+
           <section className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-5 shadow-xl backdrop-blur-sm sm:p-6">
-            <h2 className="text-lg font-bold text-sky-300">Reading the map</h2>
+            <h2 className="text-lg font-bold text-sky-300">Help guide — reading the map</h2>
             <ul className="mt-3 space-y-2.5 text-sm leading-relaxed text-slate-300">
               <li>
                 Each colored circle is a <strong className="text-slate-100">thermal hotspot</strong>{" "}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const STORAGE_KEY = "hotspots.mapHelp.dismissed";
+const STORAGE_KEY = "hotspots.mapHelp.dismissed.v2";
 
 type MapHelpCardProps = {
   onDismiss: () => void;
@@ -48,80 +48,104 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
         <div className="border-b border-slate-800 px-4 py-3 sm:px-5 sm:py-4">
           <div className="flex items-center gap-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 text-xs font-bold text-slate-950 shadow-md shadow-sky-500/20">
-              ?
+              ✦
             </span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-400">
-                Quick guide
+                Hotspots map
               </p>
               <h2
                 id="map-help-title"
                 className="text-lg font-bold tracking-tight text-slate-100"
               >
-                How to use the map
+                What&apos;s new &amp; how to use it
               </h2>
             </div>
           </div>
         </div>
 
         <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:px-5 sm:py-4">
-          <section className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
-            <h3 className="text-sm font-bold text-sky-300">Reading the map</h3>
-            <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-slate-300 sm:text-sm">
+          <section className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
+            <h3 className="text-sm font-bold text-amber-300">What&apos;s new</h3>
+            <ul className="mt-2 space-y-2 text-xs leading-relaxed text-slate-300 sm:text-sm">
               <li>
-                Colored circles are <strong className="text-slate-100">thermal hotspots</strong>{" "}
-                where multiple flights found lift.
+                <strong className="text-slate-100">Smarter filters</strong> — Min occurs, Min
+                fpm, Min ToL, and Min gain (ft) in the header. Combine them to find repeatable,
+                strong, high-base thermals.
               </li>
               <li>
-                <strong className="text-slate-100">Click a circle</strong> for climb rate, top of
-                lift, occurrence count, pilots, years, and per-thermal altitude and duration.
+                <strong className="text-slate-100">Richer hotspot popups</strong> — click a
+                circle to see each thermal&apos;s start/end altitude, gain, duration (minutes),
+                and climb rate.
               </li>
               <li>
-                Use map controls (bottom-right) for basemap and hotspot visibility.
-              </li>
-            </ul>
-          </section>
-
-          <section className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
-            <h3 className="text-sm font-bold text-violet-300">Filters</h3>
-            <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-slate-300 sm:text-sm">
-              <li>
-                <strong className="text-slate-100">Year</strong> — one calendar year or all years.
+                <strong className="text-slate-100">Better climb math</strong> — lift is
+                calculated from start altitude, end altitude, and elapsed time (not GPS
+                point spikes).
               </li>
               <li>
-                <strong className="text-slate-100">Min occurs</strong> — minimum times a hotspot
-                was hit (default 1). Try 3+ to drop one-off dots.
-              </li>
-              <li>
-                <strong className="text-slate-100">Min fpm</strong> — minimum average climb in
-                feet per minute (0 = any). Try 200+ for solid lift.
-              </li>
-              <li>
-                <strong className="text-slate-100">Min gain</strong> — minimum altitude climbed
-                in one thermal (end minus start, ft) at that hotspot.
-              </li>
-              <li>
-                <strong className="text-slate-100">Min ToL</strong> — minimum top-of-lift altitude
-                in feet MSL (0 = any).
-              </li>
-              <li>
-                <strong className="text-slate-100">Club / airport pills</strong> — filter by
-                source; pilot pills appear when a source is selected.
-              </li>
-              <li>
-                All filters combine. Tap <strong className="text-slate-100">Clear</strong> to reset.
+                <strong className="text-slate-100">Club data</strong> — Fault Line Flyers and
+                Chicago Glider Club flights from WeGlide, filterable by club and pilot.
               </li>
             </ul>
           </section>
 
           <section className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
-            <h3 className="text-sm font-bold text-emerald-300">Upload flights</h3>
-            <p className="mt-2 text-xs leading-relaxed text-slate-300 sm:text-sm">
-              Use <strong className="text-slate-100">Upload</strong> to add IGC files. Each file
-              needs <strong className="text-slate-100">HPLTPILOT</strong> and{" "}
-              <strong className="text-slate-100">HFDTE</strong> headers — pilot and date are read
-              from the file automatically.
-            </p>
+            <h3 className="text-sm font-bold text-sky-300">Help guide</h3>
+            <div className="mt-2 space-y-3 text-xs leading-relaxed text-slate-300 sm:text-sm">
+              <div>
+                <p className="font-semibold text-slate-200">Reading the map</p>
+                <ul className="mt-1.5 list-inside list-disc space-y-1 text-slate-400">
+                  <li>Colored circles are thermal hotspots — places multiple flights found lift.</li>
+                  <li>Bigger circles generally mean stronger average climb.</li>
+                  <li>Use map controls (bottom-right) for basemap and hotspot visibility.</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-semibold text-slate-200">Using filters</p>
+                <ul className="mt-1.5 list-inside list-disc space-y-1 text-slate-400">
+                  <li>
+                    <strong className="text-slate-300">Year</strong> — one season or all years.
+                  </li>
+                  <li>
+                    <strong className="text-slate-300">Min occurs</strong> — how many times the
+                    spot was hit (try 3+).
+                  </li>
+                  <li>
+                    <strong className="text-slate-300">Min fpm</strong> — minimum climb rate (try
+                    200+).
+                  </li>
+                  <li>
+                    <strong className="text-slate-300">Min ToL</strong> — minimum top-of-lift in
+                    ft MSL.
+                  </li>
+                  <li>
+                    <strong className="text-slate-300">Min gain</strong> — minimum ft climbed in
+                    one thermal (try 1500+).
+                  </li>
+                  <li>
+                    <strong className="text-slate-300">Club / pilot pills</strong> — narrow by
+                    source or individual pilot.
+                  </li>
+                  <li>
+                    Tap <strong className="text-slate-300">Clear</strong> to reset everything.
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-semibold text-slate-200">List view &amp; uploads</p>
+                <ul className="mt-1.5 list-inside list-disc space-y-1 text-slate-400">
+                  <li>
+                    Tap <strong className="text-slate-300">List</strong> for a scrollable hotspot
+                    list beside the map.
+                  </li>
+                  <li>
+                    Use <strong className="text-slate-300">Upload</strong> to add IGC files
+                    (needs HPLTPILOT and HFDTE headers).
+                  </li>
+                </ul>
+              </div>
+            </div>
           </section>
         </div>
 
