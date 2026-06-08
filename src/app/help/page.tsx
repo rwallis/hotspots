@@ -174,8 +174,7 @@ export default function HelpPage() {
               </li>
               <li>
                 <strong className="text-slate-100">Color coding:</strong> dark green = climbing,
-                dark blue = cruise/level, dark orange = sinking. A short colored trail may appear
-                behind each glider as positions update.
+                dark blue = cruise/level, dark orange = sinking.
               </li>
               <li>
                 Pan or zoom to load traffic for that area. Coverage depends on nearby OGN ground

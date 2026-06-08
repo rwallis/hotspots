@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Polyline, useMap } from "react-leaflet";
+import { useMap } from "react-leaflet";
 import OgnGliderMarker from "@/components/OgnGliderMarker";
-import { ognMarkerColor, ognFlightMode } from "@/lib/ogn/display";
 import type { OgnAircraftDto } from "@/types";
 
-const POLL_MS = 10_000;
-const TRAIL_MAX_POINTS = 10;
+const POLL_MS = 4_000;
 
 type LiveStatus = {
   count: number;
@@ -21,19 +19,15 @@ type Props = {
   onStatusChange?: (status: LiveStatus) => void;
 };
 
-type LatLng = [number, number];
-
 export default function OgnLiveLayer({ enabled, onStatusChange }: Props) {
   const map = useMap();
   const [aircraft, setAircraft] = useState<OgnAircraftDto[]>([]);
-  const [trails, setTrails] = useState<Map<string, LatLng[]>>(new Map());
   const statusRef = useRef<LiveStatus>({
     count: 0,
     loading: false,
     error: null,
     fetchedAt: null,
   });
-  const trailsRef = useRef<Map<string, LatLng[]>>(new Map());
 
   const reportStatus = useCallback(
     (next: LiveStatus) => {
@@ -42,36 +36,6 @@ export default function OgnLiveLayer({ enabled, onStatusChange }: Props) {
     },
     [onStatusChange],
   );
-
-  const updateTrails = useCallback((nextAircraft: OgnAircraftDto[]) => {
-    const activeIds = new Set(nextAircraft.map((item) => item.id));
-    const nextTrails = new Map(trailsRef.current);
-
-    for (const id of [...nextTrails.keys()]) {
-      if (!activeIds.has(id)) {
-        nextTrails.delete(id);
-      }
-    }
-
-    for (const item of nextAircraft) {
-      const history = nextTrails.get(item.id) ?? [];
-      const last = history[history.length - 1];
-      const point: LatLng = [item.lat, item.lon];
-
-      if (!last || last[0] !== point[0] || last[1] !== point[1]) {
-        history.push(point);
-      }
-
-      if (history.length > TRAIL_MAX_POINTS) {
-        history.splice(0, history.length - TRAIL_MAX_POINTS);
-      }
-
-      nextTrails.set(item.id, history);
-    }
-
-    trailsRef.current = nextTrails;
-    setTrails(new Map(nextTrails));
-  }, []);
 
   const fetchLive = useCallback(async () => {
     const bounds = map.getBounds();
@@ -106,7 +70,6 @@ export default function OgnLiveLayer({ enabled, onStatusChange }: Props) {
       const nextAircraft = payload.aircraft ?? [];
       const nextFetchedAt = payload.fetchedAt ?? new Date().toISOString();
       setAircraft(nextAircraft);
-      updateTrails(nextAircraft);
       reportStatus({
         count: nextAircraft.length,
         loading: false,
@@ -123,13 +86,11 @@ export default function OgnLiveLayer({ enabled, onStatusChange }: Props) {
         fetchedAt: statusRef.current.fetchedAt,
       });
     }
-  }, [map, reportStatus, updateTrails]);
+  }, [map, reportStatus]);
 
   useEffect(() => {
     if (!enabled) {
       setAircraft([]);
-      trailsRef.current = new Map();
-      setTrails(new Map());
       reportStatus({ count: 0, loading: false, error: null, fetchedAt: null });
       return;
     }
@@ -151,26 +112,6 @@ export default function OgnLiveLayer({ enabled, onStatusChange }: Props) {
 
   return (
     <>
-      {[...trails.entries()].map(([id, positions]) => {
-        if (positions.length < 2) return null;
-        const item = aircraft.find((entry) => entry.id === id);
-        if (!item) return null;
-        const color = ognMarkerColor(ognFlightMode(item));
-        return (
-          <Polyline
-            key={`trail-${id}`}
-            positions={positions}
-            pathOptions={{
-              color,
-              weight: 2.5,
-              opacity: 0.55,
-              lineCap: "round",
-              lineJoin: "round",
-            }}
-          />
-        );
-      })}
-
       {aircraft.map((item) => (
         <OgnGliderMarker key={item.id} aircraft={item} />
       ))}

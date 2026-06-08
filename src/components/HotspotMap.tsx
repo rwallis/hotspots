@@ -6,7 +6,6 @@ import { Circle, MapContainer, Popup, TileLayer } from "react-leaflet";
 import HotspotThermalsList from "@/components/HotspotThermalsList";
 import OgnLiveLayer from "@/components/OgnLiveLayer";
 import type { HotspotDto } from "@/types";
-
 type Props = {
   hotspots: HotspotDto[];
   initialView?: [number, number, number];
@@ -43,12 +42,27 @@ export default function HotspotMap({
   const [base, setBase] = useState<BaseLayer>("topo");
   const [showHotspots, setShowHotspots] = useState(true);
   const [showLive, setShowLive] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [liveStatus, setLiveStatus] = useState({
     count: 0,
     loading: false,
     error: null as string | null,
     fetchedAt: null as string | null,
   });
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 640px)");
+    const sync = () => {
+      setIsDesktop(media.matches);
+      if (media.matches) {
+        setControlsOpen(true);
+      }
+    };
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
 
   const selected = useMemo(
     () => hotspots.find((hotspot) => hotspot.id === selectedHotspotId) ?? null,
@@ -185,7 +199,35 @@ export default function HotspotMap({
       </MapContainer>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 top-0 z-[1000]">
-        <div className="pointer-events-auto absolute bottom-3 left-3 right-3 flex flex-col gap-2 sm:left-auto sm:right-3 sm:max-w-[220px]">
+        {!controlsOpen && !isDesktop && (
+          <button
+            type="button"
+            onClick={() => setControlsOpen(true)}
+            className="pointer-events-auto absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-slate-700/80 bg-slate-900/95 px-3.5 py-2 text-xs font-semibold text-slate-100 shadow-xl backdrop-blur-md"
+            aria-label="Show map controls"
+          >
+            <svg
+              className="h-4 w-4 text-sky-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden
+            >
+              <path
+                fillRule="evenodd"
+                d="M2 4.25A2.25 2.25 0 014.25 2h11.5A2.25 2.25 0 0118 4.25v11.5A2.25 2.25 0 0115.75 18H4.25A2.25 2.25 0 012 15.75V4.25zm4.03 6.28a.75.75 0 00-1.06-1.06L4.97 9.47l-1.28-1.28a.75.75 0 00-1.06 1.06l1.75 1.75c.293.293.767.293 1.06 0l3.25-3.25zM13 8.25a.75.75 0 011.5 0v5.5a.75.75 0 01-1.5 0v-5.5zM11 10.5a.75.75 0 011.5 0v3.25a.75.75 0 01-1.5 0V10.5zM9 12a.75.75 0 011.5 0v1.75a.75.75 0 01-1.5 0V12z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Map
+          </button>
+        )}
+
+        <div
+          className={[
+            "pointer-events-auto absolute bottom-3 left-3 right-3 flex flex-col gap-2 sm:left-auto sm:right-3 sm:max-w-[220px]",
+            controlsOpen || isDesktop ? "flex" : "hidden",
+          ].join(" ")}
+        >
           <div
             className={[
               "rounded-2xl border p-2.5 shadow-xl backdrop-blur-md",
@@ -194,14 +236,30 @@ export default function HotspotMap({
                 : "border-white/80 bg-white/95 shadow-slate-900/10",
             ].join(" ")}
           >
-            <p
-              className={[
-                "mb-1.5 hidden text-[10px] font-bold uppercase tracking-wider sm:block",
-                darkChrome ? "text-slate-500" : "text-slate-400",
-              ].join(" ")}
-            >
-              Map style
-            </p>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <p
+                className={[
+                  "text-[10px] font-bold uppercase tracking-wider",
+                  darkChrome ? "text-slate-500" : "text-slate-400",
+                ].join(" ")}
+              >
+                Map controls
+              </p>
+              {!isDesktop && (
+                <button
+                  type="button"
+                  onClick={() => setControlsOpen(false)}
+                  className={[
+                    "rounded-lg px-2 py-0.5 text-[10px] font-semibold transition",
+                    darkChrome
+                      ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                      : "text-slate-500 hover:bg-slate-100",
+                  ].join(" ")}
+                >
+                  Hide
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-4 gap-1 sm:grid-cols-2">
               {(["street", "satellite", "topo", "dark"] as BaseLayer[]).map((layer) => (
                 <button

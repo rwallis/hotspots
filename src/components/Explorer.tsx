@@ -37,12 +37,28 @@ export default function Explorer() {
   const [error, setError] = useState<string | null>(null);
   const [mapHelpMounted, setMapHelpMounted] = useState(false);
   const [showMapHelp, setShowMapHelp] = useState(false);
+  const [headerOpen, setHeaderOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     setMapHelpMounted(true);
     if (!readMapHelpDismissed()) {
       setShowMapHelp(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 640px)");
+    const sync = () => {
+      setIsDesktop(media.matches);
+      if (media.matches) {
+        setHeaderOpen(true);
+        setFiltersOpen(true);
+      }
+    };
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
   }, []);
 
   const loadData = useCallback(async () => {
@@ -234,14 +250,14 @@ export default function Explorer() {
   const headerExpanded = expandedSourceGroups.length > 0;
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-32 top-0 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
         <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
 
-      <div className="relative flex flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 shadow-lg shadow-black/20 backdrop-blur-xl">
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <header className="z-30 shrink-0 border-b border-slate-800/80 bg-slate-950/90 shadow-lg shadow-black/20 backdrop-blur-xl">
           <div className="mx-auto max-w-7xl px-3 py-2 sm:px-5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
@@ -276,14 +292,50 @@ export default function Explorer() {
               </div>
 
               <div className="flex shrink-0 items-center gap-1.5">
+                {!isDesktop && (
+                  <button
+                    type="button"
+                    onClick={() => setShowMapHelp(true)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/60 text-xs font-bold text-sky-300 sm:hidden"
+                    aria-label="Open guide"
+                  >
+                    ?
+                  </button>
+                )}
+                {!isDesktop && (
+                  <button
+                    type="button"
+                    onClick={() => setHeaderOpen((open) => !open)}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 sm:hidden"
+                    aria-expanded={headerOpen}
+                    aria-label={headerOpen ? "Collapse header" : "Expand header"}
+                  >
+                    {headerOpen ? "Hide" : "Filters"}
+                    <svg
+                      className={[
+                        "h-3.5 w-3.5 transition",
+                        headerOpen ? "rotate-180" : "",
+                      ].join(" ")}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowMapHelp(true)}
-                  className={btnSecondary}
+                  className={`hidden sm:inline-flex ${btnSecondary}`}
                 >
                   Guide
                 </button>
-                <a href="/help" className={btnSecondary}>
+                <a href="/help" className={`hidden sm:inline-flex ${btnSecondary}`}>
                   Help
                 </a>
                 <a href="/upload" className={`hidden sm:inline-flex ${btnSecondary}`}>
@@ -300,7 +352,12 @@ export default function Explorer() {
             </div>
           </div>
 
-          <div className="border-t border-slate-800/60">
+          <div
+            className={[
+              "border-t border-slate-800/60",
+              headerOpen || isDesktop ? "block" : "hidden",
+            ].join(" ")}
+          >
             <div className="mx-auto max-w-7xl px-3 sm:px-5">
               <button
                 type="button"
@@ -568,11 +625,21 @@ export default function Explorer() {
           </div>
         </header>
 
-        <main className="relative flex flex-1 flex-col">
+        <main className="relative flex min-h-0 flex-1 flex-col">
           {!showList ? (
-            <div className="relative min-h-[calc(100dvh-5.5rem)] flex-1 sm:min-h-[calc(100dvh-6rem)]">
-              <div className="absolute inset-0 p-1.5 sm:p-3">
-                <div className="relative h-full overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40 shadow-xl shadow-black/20 sm:rounded-3xl">
+            <div className="relative min-h-0 flex-1">
+              <div
+                className={[
+                  "absolute inset-0",
+                  headerOpen || isDesktop ? "p-1 sm:p-3" : "p-0",
+                ].join(" ")}
+              >
+                <div
+                  className={[
+                    "relative h-full overflow-hidden border border-slate-800/80 bg-slate-900/40 shadow-xl shadow-black/20",
+                    headerOpen || isDesktop ? "rounded-2xl sm:rounded-3xl" : "rounded-none border-x-0 border-b-0",
+                  ].join(" ")}
+                >
                   <HotspotMapClient
                     hotspots={filteredHotspots}
                     fullHeight
@@ -584,16 +651,26 @@ export default function Explorer() {
                 </div>
               </div>
               {mapHelpMounted && showMapHelp && (
-                <div className="absolute inset-0 z-[1100] p-1.5 sm:p-3">
-                  <div className="relative h-full overflow-hidden rounded-2xl sm:rounded-3xl">
+                <div
+                  className={[
+                    "absolute inset-0 z-[1100]",
+                    headerOpen || isDesktop ? "p-1 sm:p-3" : "p-0",
+                  ].join(" ")}
+                >
+                  <div
+                    className={[
+                      "relative h-full overflow-hidden",
+                      headerOpen || isDesktop ? "rounded-2xl sm:rounded-3xl" : "rounded-none",
+                    ].join(" ")}
+                  >
                     <MapHelpCard onDismiss={() => setShowMapHelp(false)} />
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-3 p-2 sm:grid sm:grid-cols-[minmax(260px,340px)_1fr] sm:gap-4 sm:p-3">
-              <aside className="order-2 flex max-h-[45dvh] flex-col overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/70 shadow-xl sm:order-1 sm:max-h-[calc(100dvh-7rem)] sm:rounded-3xl">
+            <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-1 flex-col gap-2 overflow-hidden p-2 sm:grid sm:grid-cols-[minmax(260px,340px)_1fr] sm:gap-4 sm:p-3">
+              <aside className="order-2 flex max-h-[38dvh] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/70 shadow-xl sm:order-1 sm:max-h-none sm:rounded-3xl">
                 <div className="border-b border-slate-800 px-3 py-2">
                   <h2 className="text-xs font-bold text-slate-100 sm:text-sm">
                     Hotspot list
@@ -657,7 +734,7 @@ export default function Explorer() {
                 </div>
               </aside>
 
-              <div className="order-1 min-h-[40dvh] flex-1 sm:order-2 sm:min-h-[calc(100dvh-7rem)]">
+              <div className="order-1 min-h-0 flex-1 sm:order-2">
                 <div className="h-full overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40 shadow-xl sm:rounded-3xl">
                   <HotspotMapClient
                     hotspots={filteredHotspots}
