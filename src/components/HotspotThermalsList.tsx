@@ -104,6 +104,13 @@ export default function HotspotThermalsList({
               <span className={label}>Start alt:</span> {formatAlt(thermal.startAltFt)}
               {" · "}
               <span className={label}>End alt:</span> {formatAlt(thermal.endAltFt)}
+              {thermal.startAltFt != null && thermal.endAltFt != null && (
+                <>
+                  {" · "}
+                  <span className={label}>Gain:</span>{" "}
+                  {Math.round(thermal.endAltFt - thermal.startAltFt).toLocaleString()} ft
+                </>
+              )}
             </div>
             <div className={muted}>
               <span className={label}>Duration:</span>{" "}

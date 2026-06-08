@@ -78,6 +78,11 @@ export default function HelpPage() {
                 around 150–250 fpm; higher values show only stronger lift.
               </li>
               <li>
+                <strong className="text-slate-100">Min gain</strong> — minimum altitude gained in
+                a single thermal at that hotspot (end altitude minus start, in feet). Leave at 0
+                for no limit. Try 1500+ for strong climbs.
+              </li>
+              <li>
                 <strong className="text-slate-100">Min ToL</strong> — minimum top-of-lift altitude
                 in feet MSL (the highest point pilots climbed to in thermals at that hotspot).
                 Leave at 0 for no limit. Useful to find high-base days or ignore low scratch lift
@@ -94,12 +99,12 @@ export default function HelpPage() {
               </li>
               <li>
                 Tap <strong className="text-slate-100">Clear</strong> to reset year, Min occurs,
-                Min fpm, Min ToL, source, and pilot filters.
+                Min fpm, Min gain, Min ToL, source, and pilot filters.
               </li>
             </ul>
             <p className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/5 px-3 py-2.5 text-xs leading-relaxed text-slate-400 sm:text-sm">
               <strong className="text-violet-200">Example:</strong> Year 2024, Min occurs 3,
-              Min fpm 200, Min ToL 3500 — shows 2024 hotspots hit at least three times, averaging
+              Min fpm 200, Min gain 1500, Min ToL 3500 — shows 2024 hotspots hit at least three times, averaging
               200+ fpm, with someone topping 3,500 ft MSL there.
             </p>
           </section>
@@ -131,7 +136,7 @@ export default function HelpPage() {
             </h2>
             <ul className="mt-2 space-y-1.5 text-sm text-slate-400">
               <li>Hotspot colors vary by pilot — similar hues often mean the same pilot dominated that lift.</li>
-              <li>Year, Min occurs, Min fpm, Min ToL, source, and pilot filters all apply together.</li>
+              <li>Year, Min occurs, Min fpm, Min gain, Min ToL, source, and pilot filters all apply together.</li>
               <li>The hotspot count in the header updates as you filter.</li>
               <li>On mobile, tap Filters in the header to expand the filter bar.</li>
             </ul>

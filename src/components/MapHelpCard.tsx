@@ -97,8 +97,12 @@ export default function MapHelpCard({ onDismiss }: MapHelpCardProps) {
                 feet per minute (0 = any). Try 200+ for solid lift.
               </li>
               <li>
+                <strong className="text-slate-100">Min gain</strong> — minimum altitude climbed
+                in one thermal (end minus start, ft) at that hotspot.
+              </li>
+              <li>
                 <strong className="text-slate-100">Min ToL</strong> — minimum top-of-lift altitude
-                in feet MSL (0 = any). Hides low-altitude thermals.
+                in feet MSL (0 = any).
               </li>
               <li>
                 <strong className="text-slate-100">Club / airport pills</strong> — filter by

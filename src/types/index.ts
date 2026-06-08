@@ -20,6 +20,7 @@ export type HotspotDto = {
   lon: number;
   avgClimbKts: number;
   topAltFt: number | null;
+  maxGainFt: number | null;
   count: number;
   pilot: string;
   pilots: string[];

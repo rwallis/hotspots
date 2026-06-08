@@ -44,6 +44,7 @@ export async function GET(request: Request) {
     const hotspotIds = hotspots.map((hotspot) => hotspot.id);
 
     let topAltByHotspot = new Map<string, number>();
+    let maxGainByHotspot = new Map<string, number>();
     if (hotspotIds.length > 0) {
       const altGroups = await prisma.thermal.groupBy({
         by: ["hotspotId"],
@@ -60,6 +61,31 @@ export async function GET(request: Request) {
           .filter((group) => group.hotspotId && group._max.altFt != null)
           .map((group) => [group.hotspotId!, group._max.altFt!]),
       );
+
+      const gainThermals = await prisma.thermal.findMany({
+        where: {
+          hotspotId: { in: hotspotIds },
+          startAltFt: { not: null },
+          altFt: { not: null },
+          ...(year ? { year } : {}),
+        },
+        select: {
+          hotspotId: true,
+          startAltFt: true,
+          altFt: true,
+        },
+      });
+
+      for (const thermal of gainThermals) {
+        if (!thermal.hotspotId || thermal.startAltFt == null || thermal.altFt == null) {
+          continue;
+        }
+        const gain = thermal.altFt - thermal.startAltFt;
+        const previous = maxGainByHotspot.get(thermal.hotspotId) ?? 0;
+        if (gain > previous) {
+          maxGainByHotspot.set(thermal.hotspotId, gain);
+        }
+      }
     }
 
     const filtered: HotspotDto[] = hotspots
@@ -76,6 +102,7 @@ export async function GET(request: Request) {
           lon: hotspot.lon,
           avgClimbKts: hotspot.avgClimbKts,
           topAltFt: topAltByHotspot.get(hotspot.id) ?? null,
+          maxGainFt: maxGainByHotspot.get(hotspot.id) ?? null,
           count,
           pilot: hotspot.pilotNames[0] ?? "Unknown",
           pilots: hotspot.pilotNames,

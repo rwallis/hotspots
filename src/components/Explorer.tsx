@@ -29,6 +29,7 @@ export default function Explorer() {
   const [minOccurrences, setMinOccurrences] = useState(1);
   const [minClimbFpm, setMinClimbFpm] = useState(0);
   const [minTopAltFt, setMinTopAltFt] = useState(0);
+  const [minGainFt, setMinGainFt] = useState(0);
   const [hotspots, setHotspots] = useState<HotspotDto[]>([]);
   const [sources, setSources] = useState<SourceWithPilotsDto[]>([]);
   const [years, setYears] = useState<number[]>([]);
@@ -129,6 +130,9 @@ export default function Explorer() {
       if (minTopAltFt > 0) {
         if (hotspot.topAltFt == null || hotspot.topAltFt < minTopAltFt) return false;
       }
+      if (minGainFt > 0) {
+        if (hotspot.maxGainFt == null || hotspot.maxGainFt < minGainFt) return false;
+      }
       if (
         allowedPilotSet &&
         !hotspot.pilots.some((pilot) => allowedPilotSet.has(pilot))
@@ -143,6 +147,7 @@ export default function Explorer() {
     minOccurrences,
     minClimbFpm,
     minTopAltFt,
+    minGainFt,
   ]);
 
   useEffect(() => {
@@ -192,6 +197,7 @@ export default function Explorer() {
     setMinOccurrences(1);
     setMinClimbFpm(0);
     setMinTopAltFt(0);
+    setMinGainFt(0);
     setSelectedHotspotId(null);
   }
 
@@ -200,12 +206,14 @@ export default function Explorer() {
     selectedPilots.length > 0 ||
     minOccurrences > 1 ||
     minClimbFpm > 0 ||
-    minTopAltFt > 0;
+    minTopAltFt > 0 ||
+    minGainFt > 0;
 
   const strengthFilterActive =
     minOccurrences > 1 ||
     minClimbFpm > 0 ||
-    minTopAltFt > 0;
+    minTopAltFt > 0 ||
+    minGainFt > 0;
 
   const strengthFilterLabel = (() => {
     if (!strengthFilterActive) return "";
@@ -213,6 +221,7 @@ export default function Explorer() {
     if (minOccurrences > 1) parts.push(`≥${minOccurrences}`);
     if (minClimbFpm > 0) parts.push(`${minClimbFpm}+ fpm`);
     if (minTopAltFt > 0) parts.push(`ToL ≥${minTopAltFt.toLocaleString()} ft`);
+    if (minGainFt > 0) parts.push(`gain ≥${minGainFt.toLocaleString()} ft`);
     return parts.join(" · ");
   })();
 
@@ -411,6 +420,26 @@ export default function Explorer() {
                         setSelectedHotspotId(null);
                       }}
                       aria-label="Minimum top of lift altitude in feet"
+                      className="w-16 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-[4.5rem] sm:text-sm"
+                    />
+                    <span className="text-[10px] text-slate-500">ft</span>
+                  </label>
+
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span className="whitespace-nowrap font-medium">Min gain</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={20000}
+                      step={100}
+                      value={minGainFt || ""}
+                      placeholder="0"
+                      onChange={(event) => {
+                        const next = Math.max(0, Number(event.target.value) || 0);
+                        setMinGainFt(next);
+                        setSelectedHotspotId(null);
+                      }}
+                      aria-label="Minimum altitude gain in feet"
                       className="w-16 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 outline-none transition focus:border-sky-500 sm:w-[4.5rem] sm:text-sm"
                     />
                     <span className="text-[10px] text-slate-500">ft</span>
