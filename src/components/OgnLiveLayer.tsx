@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMap } from "react-leaflet";
 import OgnGliderMarker from "@/components/OgnGliderMarker";
+import { boundsFromLeaflet } from "@/lib/ogn/bounds";
 import type { OgnAircraftDto } from "@/types";
 
 const POLL_MS = 4_000;
@@ -38,12 +39,16 @@ export default function OgnLiveLayer({ enabled, onStatusChange }: Props) {
   );
 
   const fetchLive = useCallback(async () => {
-    const bounds = map.getBounds();
+    const bounds = boundsFromLeaflet(map);
+    if (!bounds) {
+      return;
+    }
+
     const params = new URLSearchParams({
-      north: String(bounds.getNorth()),
-      south: String(bounds.getSouth()),
-      east: String(bounds.getEast()),
-      west: String(bounds.getWest()),
+      north: String(bounds.north),
+      south: String(bounds.south),
+      east: String(bounds.east),
+      west: String(bounds.west),
     });
 
     reportStatus({
@@ -95,7 +100,16 @@ export default function OgnLiveLayer({ enabled, onStatusChange }: Props) {
       return;
     }
 
-    void fetchLive();
+    const onReady = () => {
+      void fetchLive();
+    };
+
+    if (map.getSize().x > 0) {
+      onReady();
+    } else {
+      map.whenReady(onReady);
+    }
+
     const intervalId = window.setInterval(() => {
       void fetchLive();
     }, POLL_MS);

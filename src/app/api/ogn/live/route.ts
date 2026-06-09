@@ -22,9 +22,7 @@ function parseBounds(searchParams: URLSearchParams): OgnBounds | null {
     return null;
   }
 
-  const latSpan = north - south;
-  const lonSpan = east - west;
-  if (latSpan > 25 || lonSpan > 25) {
+  if (north > 90 || south < -90 || east > 180 || west < -180) {
     return null;
   }
 
